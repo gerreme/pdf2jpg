@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF to JPG</title>
+    <title>PDF TO JPG</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -256,6 +254,22 @@
             font-size: 0.9rem;
         }
         
+        .download-btn {
+            display: block;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            color: #4a9eff;
+            border: none;
+            padding: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .download-btn:hover {
+            background: rgba(74, 158, 255, 0.3);
+        }
+        
         .action-buttons {
             display: flex;
             justify-content: center;
@@ -325,8 +339,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>PDF to JPG</h1>
-            <p class="subtitle">Convert your PDF documents to high-resolution JPG images directly in your browser. No server uploads, your files remain private.</p>
+            <h1>PDF to High-Quality JPG Converter</h1>
+            <p class="subtitle">Convert your PDF documents to high-resolution JPG images directly in your browser. All files stay on your computer.</p>
         </header>
         
         <main class="converter-section">
@@ -359,13 +373,13 @@
             </div>
             
             <div class="preview-section" id="previewSection">
-                <h3 class="preview-title">Preview</h3>
+                <h3 class="preview-title">Preview & Download</h3>
                 <div class="preview-container" id="previewContainer">
                     <!-- Preview images will be added here -->
                 </div>
                 
                 <div class="action-buttons">
-                    <button class="btn" id="downloadAllBtn" disabled>Download All as ZIP</button>
+                    <button class="btn" id="downloadAllBtn" disabled>Download All Images</button>
                     <button class="btn" id="convertBtn" disabled>Convert to JPG</button>
                 </div>
             </div>
@@ -405,14 +419,14 @@
         let pdfFile = null;
         let currentDPI = 300;
         let currentQuality = 95;
-        let pagePreviews = [];
+        let convertedImages = [];
         
         // Event Listeners
         selectFileBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', handleFileSelect);
         qualitySlider.addEventListener('input', updateQuality);
         convertBtn.addEventListener('click', convertToJPG);
-        downloadAllBtn.addEventListener('click', downloadAllAsZip);
+        downloadAllBtn.addEventListener('click', downloadAllImages);
         
         // Set up DPI selection
         dpiOptions.forEach(option => {
@@ -466,7 +480,11 @@
             if (file && file.type === 'application/pdf') {
                 pdfFile = file;
                 statusMessage.textContent = `File selected: ${file.name}`;
-                loadPDFPreview();
+                previewContainer.innerHTML = '';
+                previewSection.style.display = 'flex';
+                convertBtn.disabled = false;
+                downloadAllBtn.disabled = true;
+                convertedImages = [];
             } else {
                 statusMessage.textContent = 'Please select a valid PDF file.';
             }
@@ -477,64 +495,6 @@
             qualityValue.textContent = `${currentQuality}%`;
         }
         
-        async function loadPDFPreview() {
-            if (!pdfFile) return;
-            
-            statusMessage.textContent = "Loading PDF...";
-            progressContainer.style.display = 'block';
-            
-            try {
-                const pdfData = await readFileAsArrayBuffer(pdfFile);
-                const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                const numPages = pdf.numPages;
-                
-                // Only preview first 3 pages to save resources
-                const previewPages = Math.min(numPages, 3);
-                previewContainer.innerHTML = '';
-                pagePreviews = [];
-                
-                for (let i = 1; i <= previewPages; i++) {
-                    updateProgress((i / previewPages) * 100);
-                    const page = await pdf.getPage(i);
-                    
-                    // Create preview
-                    const viewport = page.getViewport({ scale: 1.0 });
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    
-                    await page.render({
-                        canvasContext: context,
-                        viewport: viewport
-                    }).promise;
-                    
-                    const imgData = canvas.toDataURL('image/jpeg', 0.5);
-                    pagePreviews.push(imgData);
-                    
-                    // Create preview element
-                    const previewElement = document.createElement('div');
-                    previewElement.className = 'page-preview';
-                    previewElement.innerHTML = `
-                        <img src="${imgData}" alt="Page ${i} Preview" class="preview-img">
-                        <div class="page-info">Page ${i} of ${numPages}</div>
-                    `;
-                    previewContainer.appendChild(previewElement);
-                }
-                
-                previewSection.style.display = 'flex';
-                convertBtn.disabled = false;
-                downloadAllBtn.disabled = false;
-                statusMessage.textContent = `PDF loaded. ${numPages} pages detected.`;
-            } catch (error) {
-                console.error('Error loading PDF:', error);
-                statusMessage.textContent = 'Error loading PDF. Please try another file.';
-            } finally {
-                progressContainer.style.display = 'none';
-            }
-        }
-        
         async function convertToJPG() {
             if (!pdfFile) return;
             
@@ -542,12 +502,13 @@
             progressContainer.style.display = 'block';
             convertBtn.disabled = true;
             downloadAllBtn.disabled = true;
+            previewContainer.innerHTML = '';
             
             try {
                 const pdfData = await readFileAsArrayBuffer(pdfFile);
                 const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
                 const numPages = pdf.numPages;
-                const zip = new JSZip();
+                convertedImages = [];
                 
                 for (let i = 1; i <= numPages; i++) {
                     updateProgress((i / numPages) * 100);
@@ -568,31 +529,73 @@
                     
                     // Convert to JPG with specified quality
                     const imgData = canvas.toDataURL('image/jpeg', currentQuality / 100);
-                    const imgBlob = dataURLToBlob(imgData);
                     
-                    // Add to ZIP
-                    zip.file(`page-${i}.jpg`, imgBlob);
+                    // Store the image data and create preview
+                    convertedImages.push({
+                        dataUrl: imgData,
+                        pageNum: i
+                    });
+                    
+                    // Create preview element
+                    const previewElement = document.createElement('div');
+                    previewElement.className = 'page-preview';
+                    previewElement.innerHTML = `
+                        <img src="${imgData}" alt="Page ${i}" class="preview-img">
+                        <div class="page-info">Page ${i} of ${numPages}</div>
+                        <button class="download-btn" data-index="${i-1}">Download Page</button>
+                    `;
+                    previewContainer.appendChild(previewElement);
+                    
+                    // Add download event listener
+                    previewElement.querySelector('.download-btn').addEventListener('click', (e) => {
+                        const index = parseInt(e.target.dataset.index);
+                        downloadImage(index);
+                    });
                 }
                 
-                // Generate and download ZIP
-                const zipBlob = await zip.generateAsync({ type: 'blob' }, metadata => {
-                    updateProgress(100 * metadata.percent);
-                });
-                
-                saveAs(zipBlob, `converted-images-${new Date().getTime()}.zip`);
-                statusMessage.textContent = `Conversion complete! Downloaded all ${numPages} pages.`;
+                downloadAllBtn.disabled = false;
+                statusMessage.textContent = `Conversion complete! ${numPages} pages converted to JPG.`;
             } catch (error) {
                 console.error('Conversion error:', error);
                 statusMessage.textContent = 'Error during conversion. Please try again.';
-            } finally {
                 convertBtn.disabled = false;
-                downloadAllBtn.disabled = false;
+            } finally {
                 progressContainer.style.display = 'none';
             }
         }
         
-        async function downloadAllAsZip() {
-            await convertToJPG();
+        function downloadImage(index) {
+            if (!convertedImages[index]) return;
+            
+            const imgData = convertedImages[index].dataUrl;
+            const pageNum = convertedImages[index].pageNum;
+            
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = `page-${pageNum}-${pdfFile.name.replace('.pdf', '')}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            statusMessage.textContent = `Downloaded page ${pageNum} as JPG`;
+        }
+        
+        function downloadAllImages() {
+            if (convertedImages.length === 0) return;
+            
+            statusMessage.textContent = "Starting downloads...";
+            
+            // Download each image with a small delay to avoid browser blocking
+            convertedImages.forEach((img, index) => {
+                setTimeout(() => {
+                    downloadImage(index);
+                }, index * 300);
+            });
+            
+            // Final message after all downloads
+            setTimeout(() => {
+                statusMessage.textContent = `All ${convertedImages.length} images downloaded!`;
+            }, convertedImages.length * 300 + 500);
         }
         
         function updateProgress(percent) {
@@ -607,19 +610,6 @@
                 reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
             });
-        }
-        
-        function dataURLToBlob(dataURL) {
-            const parts = dataURL.split(';base64,');
-            const contentType = parts[0].split(':')[1];
-            const raw = window.atob(parts[1]);
-            const uInt8Array = new Uint8Array(raw.length);
-            
-            for (let i = 0; i < raw.length; ++i) {
-                uInt8Array[i] = raw.charCodeAt(i);
-            }
-            
-            return new Blob([uInt8Array], { type: contentType });
         }
     </script>
 </body>
