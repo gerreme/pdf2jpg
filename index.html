@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF TO JPG</title>
+    <title>Dual-Format Converter | PDF & Image to JPG</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -15,47 +16,95 @@
         
         body {
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
-            color: white;
+            color: #333;
             min-height: 100vh;
-            padding: 40px 20px;
+            padding: 30px 20px;
+            line-height: 1.6;
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
         
         header {
             text-align: center;
             margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f0f0f0;
         }
         
         h1 {
             font-size: 2.8rem;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
         .subtitle {
             font-size: 1.2rem;
-            opacity: 0.9;
-            max-width: 600px;
+            color: #555;
+            max-width: 700px;
             margin: 0 auto;
-            line-height: 1.6;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 15px;
+        }
+        
+        .tab-btn {
+            padding: 15px 35px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
         }
         
         .converter-section {
             display: flex;
             flex-direction: column;
             gap: 30px;
+            min-height: 500px;
+        }
+        
+        .converter-content {
+            display: none;
+        }
+        
+        .converter-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .upload-area {
@@ -63,30 +112,32 @@
             border-radius: 15px;
             padding: 40px 20px;
             text-align: center;
-            background: rgba(25, 40, 80, 0.4);
+            background: rgba(74, 158, 255, 0.05);
             transition: all 0.3s ease;
             cursor: pointer;
+            margin-bottom: 30px;
         }
         
         .upload-area:hover {
-            background: rgba(25, 40, 80, 0.6);
+            background: rgba(74, 158, 255, 0.1);
             transform: translateY(-5px);
         }
         
         .upload-area.highlight {
-            background: rgba(25, 40, 80, 0.8);
-            border-color: #00ff9d;
+            background: rgba(74, 158, 255, 0.15);
+            border-color: #1a2a6c;
         }
         
         .upload-icon {
             font-size: 4rem;
             margin-bottom: 20px;
-            color: #4a9eff;
+            color: #1a2a6c;
         }
         
         .upload-text {
             font-size: 1.3rem;
             margin-bottom: 15px;
+            color: #1a2a6c;
         }
         
         .file-input {
@@ -94,7 +145,7 @@
         }
         
         .btn {
-            background: linear-gradient(to right, #4a9eff, #6a5af9);
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
             color: white;
             border: none;
             padding: 14px 35px;
@@ -103,14 +154,14 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(26, 42, 108, 0.4);
             display: inline-block;
-            margin-top: 10px;
+            margin: 10px 5px;
         }
         
         .btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(74, 158, 255, 0.6);
+            box-shadow: 0 6px 20px rgba(26, 42, 108, 0.5);
         }
         
         .btn:active {
@@ -118,31 +169,38 @@
         }
         
         .btn:disabled {
-            background: #555;
+            background: #aaa;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
         
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #1a2a6c;
+            color: #1a2a6c;
+        }
+        
         .settings {
-            background: rgba(25, 40, 80, 0.4);
+            background: rgba(240, 240, 240, 0.8);
             border-radius: 15px;
             padding: 25px;
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 30px;
             justify-content: space-around;
+            margin-bottom: 30px;
         }
         
         .setting-group {
             flex: 1;
-            min-width: 200px;
+            min-width: 250px;
         }
         
         .setting-title {
             font-size: 1.2rem;
             margin-bottom: 15px;
-            color: #4a9eff;
+            color: #1a2a6c;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -150,6 +208,7 @@
         
         .setting-icon {
             font-size: 1.4rem;
+            color: #b21f1f;
         }
         
         .quality-slider {
@@ -158,7 +217,7 @@
             -webkit-appearance: none;
             height: 8px;
             border-radius: 5px;
-            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
             outline: none;
         }
         
@@ -170,13 +229,14 @@
             background: white;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            border: 2px solid #1a2a6c;
         }
         
         .quality-value {
             font-size: 1.1rem;
             font-weight: bold;
             text-align: center;
-            color: #feb47b;
+            color: #b21f1f;
         }
         
         .dpi-select {
@@ -191,24 +251,26 @@
             min-width: 80px;
             text-align: center;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.7);
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            border: 1px solid #ddd;
         }
         
         .dpi-option:hover {
-            background: rgba(74, 158, 255, 0.3);
+            background: rgba(26, 42, 108, 0.1);
         }
         
         .dpi-option.selected {
-            background: linear-gradient(to right, #4a9eff, #6a5af9);
-            box-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+            background: #1a2a6c;
+            color: white;
+            box-shadow: 0 0 10px rgba(26, 42, 108, 0.3);
         }
         
         .preview-section {
             display: none;
-            background: rgba(25, 40, 80, 0.4);
+            background: rgba(240, 240, 240, 0.8);
             border-radius: 15px;
             padding: 25px;
             flex-direction: column;
@@ -218,63 +280,67 @@
         .preview-title {
             font-size: 1.4rem;
             text-align: center;
-            color: #4a9eff;
+            color: #1a2a6c;
+            margin-bottom: 20px;
         }
         
         .preview-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 25px;
             justify-content: center;
         }
         
         .page-preview {
-            width: 180px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
+            width: 200px;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
         }
         
         .page-preview:hover {
-            transform: translateY(-5px);
+            transform: translateY(-7px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
         
         .preview-img {
             width: 100%;
-            height: 230px;
+            height: 180px;
             object-fit: cover;
-            border-bottom: 2px solid #4a9eff;
+            border-bottom: 2px solid #1a2a6c;
         }
         
         .page-info {
-            padding: 12px;
+            padding: 15px;
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            color: #555;
         }
         
         .download-btn {
             display: block;
             width: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            color: #4a9eff;
+            background: rgba(26, 42, 108, 0.9);
+            color: white;
             border: none;
-            padding: 8px;
-            font-size: 0.9rem;
+            padding: 10px;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.2s;
+            font-weight: 500;
         }
         
         .download-btn:hover {
-            background: rgba(74, 158, 255, 0.3);
+            background: #b21f1f;
         }
         
         .action-buttons {
             display: flex;
             justify-content: center;
             gap: 20px;
-            margin-top: 15px;
+            margin: 25px 0;
             flex-wrap: wrap;
         }
         
@@ -282,16 +348,17 @@
             text-align: center;
             padding: 15px;
             font-size: 1.1rem;
-            color: #feb47b;
+            color: #b21f1f;
             min-height: 30px;
+            font-weight: 500;
         }
         
         .progress-container {
             width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            margin: 10px 0;
+            height: 12px;
+            background: rgba(26, 42, 108, 0.1);
+            border-radius: 6px;
+            margin: 15px 0;
             overflow: hidden;
             display: none;
         }
@@ -299,8 +366,8 @@
         .progress-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(to right, #4a9eff, #6a5af9);
-            border-radius: 5px;
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            border-radius: 6px;
             transition: width 0.3s ease;
         }
         
@@ -308,7 +375,42 @@
             text-align: center;
             margin-top: 40px;
             font-size: 0.9rem;
-            opacity: 0.7;
+            color: #666;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .features {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .feature-card {
+            background: rgba(240, 240, 240, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: #1a2a6c;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #1a2a6c;
+        }
+        
+        .feature-desc {
+            color: #555;
         }
         
         @media (max-width: 768px) {
@@ -320,6 +422,16 @@
                 font-size: 2.2rem;
             }
             
+            .tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tab-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
             .settings {
                 flex-direction: column;
             }
@@ -328,71 +440,168 @@
                 flex-direction: column;
                 align-items: center;
             }
-            
-            .btn {
-                width: 100%;
-                max-width: 300px;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>PDF to High-Quality JPG Converter</h1>
-            <p class="subtitle">Convert your PDF documents to high-resolution JPG images directly in your browser. All files stay on your computer.</p>
+            <h1>Dual-Format Converter</h1>
+            <p class="subtitle">Convert PDF documents to high-quality JPG images or optimize your existing images to JPG format - all in your browser with no server uploads</p>
         </header>
         
-        <main class="converter-section">
-            <div class="upload-area" id="dropArea">
-                <div class="upload-icon">📄</div>
-                <h2 class="upload-text">Drag & Drop your PDF file</h2>
-                <p>or</p>
-                <button class="btn" id="selectFileBtn">Select PDF File</button>
-                <input type="file" id="fileInput" class="file-input" accept=".pdf">
+        <div class="tabs">
+            <button class="tab-btn active" id="pdfTab">
+                <i class="fas fa-file-pdf"></i> PDF to JPG
+            </button>
+            <button class="tab-btn" id="imageTab">
+                <i class="fas fa-image"></i> Image to JPG
+            </button>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="feature-title">100% Secure</h3>
+                <p class="feature-desc">All processing happens in your browser. Files never leave your computer.</p>
             </div>
             
-            <div class="settings">
-                <div class="setting-group">
-                    <h3 class="setting-title"><span class="setting-icon">⚙️</span> Quality Settings</h3>
-                    <p>JPG Quality: <span id="qualityValue" class="quality-value">95%</span></p>
-                    <input type="range" min="50" max="100" value="95" class="quality-slider" id="qualitySlider">
-                    <p class="quality-hint">Higher values = better quality & larger file size</p>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
                 </div>
-                
-                <div class="setting-group">
-                    <h3 class="setting-title"><span class="setting-icon">📏</span> Resolution (DPI)</h3>
-                    <div class="dpi-select">
-                        <div class="dpi-option selected" data-dpi="150">150 DPI</div>
-                        <div class="dpi-option" data-dpi="200">200 DPI</div>
-                        <div class="dpi-option" data-dpi="300">300 DPI</div>
-                        <div class="dpi-option" data-dpi="400">400 DPI</div>
+                <h3 class="feature-title">Fast Conversion</h3>
+                <p class="feature-desc">Quick processing with no upload delays. Results in seconds.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h3 class="feature-title">High Quality</h3>
+                <p class="feature-desc">Adjustable quality settings for perfect JPG output every time.</p>
+            </div>
+        </div>
+        
+        <div class="converter-section">
+            <!-- PDF to JPG Converter -->
+            <div class="converter-content active" id="pdfConverter">
+                <div class="upload-area" id="pdfDropArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-pdf"></i>
                     </div>
-                    <p class="dpi-hint">Higher DPI = better resolution & larger image size</p>
-                </div>
-            </div>
-            
-            <div class="preview-section" id="previewSection">
-                <h3 class="preview-title">Preview & Download</h3>
-                <div class="preview-container" id="previewContainer">
-                    <!-- Preview images will be added here -->
+                    <h2 class="upload-text">Drag & Drop your PDF file</h2>
+                    <p>or</p>
+                    <button class="btn" id="selectPdfBtn">Select PDF File</button>
+                    <input type="file" id="pdfInput" class="file-input" accept=".pdf">
                 </div>
                 
-                <div class="action-buttons">
-                    <button class="btn" id="downloadAllBtn" disabled>Download All Images</button>
-                    <button class="btn" id="convertBtn" disabled>Convert to JPG</button>
+                <div class="settings">
+                    <div class="setting-group">
+                        <h3 class="setting-title">
+                            <i class="fas fa-sliders-h setting-icon"></i> Quality Settings
+                        </h3>
+                        <p>JPG Quality: <span id="pdfQualityValue" class="quality-value">95%</span></p>
+                        <input type="range" min="50" max="100" value="95" class="quality-slider" id="pdfQualitySlider">
+                        <p class="quality-hint">Higher values = better quality & larger file size</p>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h3 class="setting-title">
+                            <i class="fas fa-ruler setting-icon"></i> Resolution (DPI)
+                        </h3>
+                        <div class="dpi-select">
+                            <div class="dpi-option selected" data-dpi="150">150 DPI</div>
+                            <div class="dpi-option" data-dpi="200">200 DPI</div>
+                            <div class="dpi-option" data-dpi="300">300 DPI</div>
+                            <div class="dpi-option" data-dpi="400">400 DPI</div>
+                        </div>
+                        <p class="dpi-hint">Higher DPI = better resolution & larger image size</p>
+                    </div>
                 </div>
+                
+                <div class="preview-section" id="pdfPreviewSection">
+                    <h3 class="preview-title">Preview & Download</h3>
+                    <div class="preview-container" id="pdfPreviewContainer">
+                        <!-- PDF preview images will be added here -->
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn" id="downloadAllPdfBtn" disabled>
+                            <i class="fas fa-download"></i> Download All Pages
+                        </button>
+                        <button class="btn btn-outline" id="resetPdfBtn">
+                            <i class="fas fa-redo"></i> Reset Converter
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="progress-container" id="pdfProgressContainer">
+                    <div class="progress-bar" id="pdfProgressBar"></div>
+                </div>
+                
+                <div class="status" id="pdfStatusMessage">Ready to convert PDF files</div>
             </div>
             
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar" id="progressBar"></div>
+            <!-- Image to JPG Converter -->
+            <div class="converter-content" id="imageConverter">
+                <div class="upload-area" id="imageDropArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <h2 class="upload-text">Drag & Drop your Images</h2>
+                    <p>Supports JPG, PNG, GIF, WEBP, BMP</p>
+                    <button class="btn" id="selectImageBtn">Select Image Files</button>
+                    <input type="file" id="imageInput" class="file-input" accept="image/*" multiple>
+                </div>
+                
+                <div class="settings">
+                    <div class="setting-group">
+                        <h3 class="setting-title">
+                            <i class="fas fa-sliders-h setting-icon"></i> Quality Settings
+                        </h3>
+                        <p>JPG Quality: <span id="imageQualityValue" class="quality-value">90%</span></p>
+                        <input type="range" min="50" max="100" value="90" class="quality-slider" id="imageQualitySlider">
+                        <p class="quality-hint">Higher values = better quality & larger file size</p>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h3 class="setting-title">
+                            <i class="fas fa-info-circle setting-icon"></i> Image Information
+                        </h3>
+                        <p>This converter will transform your images to JPG format with your selected quality settings.</p>
+                        <p>Original EXIF data and metadata will be preserved in the output images.</p>
+                    </div>
+                </div>
+                
+                <div class="preview-section" id="imagePreviewSection">
+                    <h3 class="preview-title">Preview & Download</h3>
+                    <div class="preview-container" id="imagePreviewContainer">
+                        <!-- Image previews will be added here -->
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn" id="downloadAllImageBtn" disabled>
+                            <i class="fas fa-download"></i> Download All Images
+                        </button>
+                        <button class="btn btn-outline" id="resetImageBtn">
+                            <i class="fas fa-redo"></i> Reset Converter
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="progress-container" id="imageProgressContainer">
+                    <div class="progress-bar" id="imageProgressBar"></div>
+                </div>
+                
+                <div class="status" id="imageStatusMessage">Ready to convert images</div>
             </div>
-            
-            <div class="status" id="statusMessage">Ready to convert</div>
-        </main>
+        </div>
         
         <footer>
-            <p>All processing happens in your browser. Your files are never uploaded to any server.</p>
+            <p>Dual-Format Converter &copy; 2023 | All processing happens locally in your browser. Your files are never uploaded to any server.</p>
         </footer>
     </div>
 
@@ -400,122 +609,122 @@
         // Initialize PDF.js worker
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         
-        // DOM Elements
-        const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('fileInput');
-        const selectFileBtn = document.getElementById('selectFileBtn');
-        const qualitySlider = document.getElementById('qualitySlider');
-        const qualityValue = document.getElementById('qualityValue');
-        const dpiOptions = document.querySelectorAll('.dpi-option');
-        const previewSection = document.getElementById('previewSection');
-        const previewContainer = document.getElementById('previewContainer');
-        const convertBtn = document.getElementById('convertBtn');
-        const downloadAllBtn = document.getElementById('downloadAllBtn');
-        const statusMessage = document.getElementById('statusMessage');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
+        // Tab Switching
+        const pdfTab = document.getElementById('pdfTab');
+        const imageTab = document.getElementById('imageTab');
+        const pdfConverter = document.getElementById('pdfConverter');
+        const imageConverter = document.getElementById('imageConverter');
         
-        // State variables
+        pdfTab.addEventListener('click', () => {
+            pdfTab.classList.add('active');
+            imageTab.classList.remove('active');
+            pdfConverter.classList.add('active');
+            imageConverter.classList.remove('active');
+        });
+        
+        imageTab.addEventListener('click', () => {
+            imageTab.classList.add('active');
+            pdfTab.classList.remove('active');
+            imageConverter.classList.add('active');
+            pdfConverter.classList.remove('active');
+        });
+        
+        // PDF Converter Elements
+        const pdfDropArea = document.getElementById('pdfDropArea');
+        const pdfInput = document.getElementById('pdfInput');
+        const selectPdfBtn = document.getElementById('selectPdfBtn');
+        const pdfQualitySlider = document.getElementById('pdfQualitySlider');
+        const pdfQualityValue = document.getElementById('pdfQualityValue');
+        const pdfDpiOptions = document.querySelectorAll('#pdfConverter .dpi-option');
+        const pdfPreviewSection = document.getElementById('pdfPreviewSection');
+        const pdfPreviewContainer = document.getElementById('pdfPreviewContainer');
+        const downloadAllPdfBtn = document.getElementById('downloadAllPdfBtn');
+        const resetPdfBtn = document.getElementById('resetPdfBtn');
+        const pdfStatusMessage = document.getElementById('pdfStatusMessage');
+        const pdfProgressContainer = document.getElementById('pdfProgressContainer');
+        const pdfProgressBar = document.getElementById('pdfProgressBar');
+        
+        // Image Converter Elements
+        const imageDropArea = document.getElementById('imageDropArea');
+        const imageInput = document.getElementById('imageInput');
+        const selectImageBtn = document.getElementById('selectImageBtn');
+        const imageQualitySlider = document.getElementById('imageQualitySlider');
+        const imageQualityValue = document.getElementById('imageQualityValue');
+        const imagePreviewSection = document.getElementById('imagePreviewSection');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const downloadAllImageBtn = document.getElementById('downloadAllImageBtn');
+        const resetImageBtn = document.getElementById('resetImageBtn');
+        const imageStatusMessage = document.getElementById('imageStatusMessage');
+        const imageProgressContainer = document.getElementById('imageProgressContainer');
+        const imageProgressBar = document.getElementById('imageProgressBar');
+        
+        // State variables for PDF converter
         let pdfFile = null;
-        let currentDPI = 300;
-        let currentQuality = 95;
-        let convertedImages = [];
+        let pdfCurrentDPI = 300;
+        let pdfCurrentQuality = 95;
+        let pdfConvertedImages = [];
         
-        // Event Listeners
-        selectFileBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', handleFileSelect);
-        qualitySlider.addEventListener('input', updateQuality);
-        convertBtn.addEventListener('click', convertToJPG);
-        downloadAllBtn.addEventListener('click', downloadAllImages);
+        // State variables for Image converter
+        let imageFiles = [];
+        let imageCurrentQuality = 90;
+        let imageConvertedFiles = [];
         
-        // Set up DPI selection
-        dpiOptions.forEach(option => {
+        // PDF Converter Functions
+        selectPdfBtn.addEventListener('click', () => pdfInput.click());
+        pdfInput.addEventListener('change', handlePdfFileSelect);
+        pdfQualitySlider.addEventListener('input', updatePdfQuality);
+        downloadAllPdfBtn.addEventListener('click', downloadAllPdfImages);
+        resetPdfBtn.addEventListener('click', resetPdfConverter);
+        
+        // Set up DPI selection for PDF
+        pdfDpiOptions.forEach(option => {
             option.addEventListener('click', () => {
-                dpiOptions.forEach(opt => opt.classList.remove('selected'));
+                pdfDpiOptions.forEach(opt => opt.classList.remove('selected'));
                 option.classList.add('selected');
-                currentDPI = parseInt(option.dataset.dpi);
+                pdfCurrentDPI = parseInt(option.dataset.dpi);
             });
         });
         
-        // Drag and drop functionality
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-        
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-        
-        function highlight() {
-            dropArea.classList.add('highlight');
-        }
-        
-        function unhighlight() {
-            dropArea.classList.remove('highlight');
-        }
-        
-        dropArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const file = dt.files[0];
-            handleFile(file);
-        }
-        
-        function handleFileSelect(e) {
+        function handlePdfFileSelect(e) {
             const file = e.target.files[0];
-            handleFile(file);
+            handlePdfFile(file);
         }
         
-        function handleFile(file) {
+        function handlePdfFile(file) {
             if (file && file.type === 'application/pdf') {
                 pdfFile = file;
-                statusMessage.textContent = `File selected: ${file.name}`;
-                previewContainer.innerHTML = '';
-                previewSection.style.display = 'flex';
-                convertBtn.disabled = false;
-                downloadAllBtn.disabled = true;
-                convertedImages = [];
+                pdfStatusMessage.textContent = `PDF selected: ${file.name}`;
+                resetPdfPreview();
+                convertPdfToJpg();
             } else {
-                statusMessage.textContent = 'Please select a valid PDF file.';
+                pdfStatusMessage.textContent = 'Please select a valid PDF file.';
             }
         }
         
-        function updateQuality() {
-            currentQuality = parseInt(qualitySlider.value);
-            qualityValue.textContent = `${currentQuality}%`;
+        function updatePdfQuality() {
+            pdfCurrentQuality = parseInt(pdfQualitySlider.value);
+            pdfQualityValue.textContent = `${pdfCurrentQuality}%`;
         }
         
-        async function convertToJPG() {
+        async function convertPdfToJpg() {
             if (!pdfFile) return;
             
-            statusMessage.textContent = "Converting PDF to JPG...";
-            progressContainer.style.display = 'block';
-            convertBtn.disabled = true;
-            downloadAllBtn.disabled = true;
-            previewContainer.innerHTML = '';
+            pdfStatusMessage.textContent = "Converting PDF to JPG...";
+            pdfProgressContainer.style.display = 'block';
             
             try {
                 const pdfData = await readFileAsArrayBuffer(pdfFile);
                 const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
                 const numPages = pdf.numPages;
-                convertedImages = [];
+                pdfConvertedImages = [];
+                pdfPreviewContainer.innerHTML = '';
                 
                 for (let i = 1; i <= numPages; i++) {
-                    updateProgress((i / numPages) * 100);
-                    statusMessage.textContent = `Processing page ${i} of ${numPages}...`;
+                    updatePdfProgress((i / numPages) * 100);
+                    pdfStatusMessage.textContent = `Processing page ${i} of ${numPages}...`;
                     
                     const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: currentDPI / 72 });
+                    const viewport = page.getViewport({ scale: pdfCurrentDPI / 72 });
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
                     
@@ -528,10 +737,10 @@
                     }).promise;
                     
                     // Convert to JPG with specified quality
-                    const imgData = canvas.toDataURL('image/jpeg', currentQuality / 100);
+                    const imgData = canvas.toDataURL('image/jpeg', pdfCurrentQuality / 100);
                     
                     // Store the image data and create preview
-                    convertedImages.push({
+                    pdfConvertedImages.push({
                         dataUrl: imgData,
                         pageNum: i
                     });
@@ -542,33 +751,35 @@
                     previewElement.innerHTML = `
                         <img src="${imgData}" alt="Page ${i}" class="preview-img">
                         <div class="page-info">Page ${i} of ${numPages}</div>
-                        <button class="download-btn" data-index="${i-1}">Download Page</button>
+                        <button class="download-btn" data-index="${i-1}">
+                            <i class="fas fa-download"></i> Download Page
+                        </button>
                     `;
-                    previewContainer.appendChild(previewElement);
+                    pdfPreviewContainer.appendChild(previewElement);
                     
                     // Add download event listener
                     previewElement.querySelector('.download-btn').addEventListener('click', (e) => {
                         const index = parseInt(e.target.dataset.index);
-                        downloadImage(index);
+                        downloadPdfImage(index);
                     });
                 }
                 
-                downloadAllBtn.disabled = false;
-                statusMessage.textContent = `Conversion complete! ${numPages} pages converted to JPG.`;
+                pdfPreviewSection.style.display = 'block';
+                downloadAllPdfBtn.disabled = false;
+                pdfStatusMessage.textContent = `PDF conversion complete! ${numPages} pages converted to JPG.`;
             } catch (error) {
-                console.error('Conversion error:', error);
-                statusMessage.textContent = 'Error during conversion. Please try again.';
-                convertBtn.disabled = false;
+                console.error('PDF conversion error:', error);
+                pdfStatusMessage.textContent = 'Error during PDF conversion. Please try another file.';
             } finally {
-                progressContainer.style.display = 'none';
+                pdfProgressContainer.style.display = 'none';
             }
         }
         
-        function downloadImage(index) {
-            if (!convertedImages[index]) return;
+        function downloadPdfImage(index) {
+            if (!pdfConvertedImages[index]) return;
             
-            const imgData = convertedImages[index].dataUrl;
-            const pageNum = convertedImages[index].pageNum;
+            const imgData = pdfConvertedImages[index].dataUrl;
+            const pageNum = pdfConvertedImages[index].pageNum;
             
             const link = document.createElement('a');
             link.href = imgData;
@@ -577,29 +788,188 @@
             link.click();
             document.body.removeChild(link);
             
-            statusMessage.textContent = `Downloaded page ${pageNum} as JPG`;
+            pdfStatusMessage.textContent = `Downloaded page ${pageNum} as JPG`;
         }
         
-        function downloadAllImages() {
-            if (convertedImages.length === 0) return;
+        function downloadAllPdfImages() {
+            if (pdfConvertedImages.length === 0) return;
             
-            statusMessage.textContent = "Starting downloads...";
+            pdfStatusMessage.textContent = "Starting downloads...";
             
             // Download each image with a small delay to avoid browser blocking
-            convertedImages.forEach((img, index) => {
+            pdfConvertedImages.forEach((img, index) => {
                 setTimeout(() => {
-                    downloadImage(index);
+                    downloadPdfImage(index);
                 }, index * 300);
             });
             
             // Final message after all downloads
             setTimeout(() => {
-                statusMessage.textContent = `All ${convertedImages.length} images downloaded!`;
-            }, convertedImages.length * 300 + 500);
+                pdfStatusMessage.textContent = `All ${pdfConvertedImages.length} pages downloaded!`;
+            }, pdfConvertedImages.length * 300 + 500);
         }
         
-        function updateProgress(percent) {
-            progressBar.style.width = `${percent}%`;
+        function resetPdfConverter() {
+            pdfFile = null;
+            pdfInput.value = '';
+            pdfConvertedImages = [];
+            pdfPreviewContainer.innerHTML = '';
+            pdfPreviewSection.style.display = 'none';
+            downloadAllPdfBtn.disabled = true;
+            pdfStatusMessage.textContent = 'Ready to convert PDF files';
+        }
+        
+        function updatePdfProgress(percent) {
+            pdfProgressBar.style.width = `${percent}%`;
+        }
+        
+        function resetPdfPreview() {
+            pdfPreviewContainer.innerHTML = '';
+            pdfPreviewSection.style.display = 'none';
+            downloadAllPdfBtn.disabled = true;
+        }
+        
+        // Image Converter Functions
+        selectImageBtn.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', handleImageFileSelect);
+        imageQualitySlider.addEventListener('input', updateImageQuality);
+        downloadAllImageBtn.addEventListener('click', downloadAllImageFiles);
+        resetImageBtn.addEventListener('click', resetImageConverter);
+        
+        function handleImageFileSelect(e) {
+            const files = Array.from(e.target.files);
+            handleImageFiles(files);
+        }
+        
+        function handleImageFiles(files) {
+            if (files.length > 0) {
+                imageFiles = files.filter(file => file.type.startsWith('image/'));
+                if (imageFiles.length > 0) {
+                    imageStatusMessage.textContent = `${imageFiles.length} image(s) selected`;
+                    resetImagePreview();
+                    convertImagesToJpg();
+                } else {
+                    imageStatusMessage.textContent = 'Please select valid image files.';
+                }
+            }
+        }
+        
+        function updateImageQuality() {
+            imageCurrentQuality = parseInt(imageQualitySlider.value);
+            imageQualityValue.textContent = `${imageCurrentQuality}%`;
+        }
+        
+        async function convertImagesToJpg() {
+            if (imageFiles.length === 0) return;
+            
+            imageStatusMessage.textContent = "Converting images to JPG...";
+            imageProgressContainer.style.display = 'block';
+            imageConvertedFiles = [];
+            imagePreviewContainer.innerHTML = '';
+            
+            for (let i = 0; i < imageFiles.length; i++) {
+                updateImageProgress(((i + 1) / imageFiles.length) * 100);
+                imageStatusMessage.textContent = `Processing image ${i+1} of ${imageFiles.length}...`;
+                
+                const file = imageFiles[i];
+                const img = await createImageBitmap(file);
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas dimensions to match image
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Draw image on canvas
+                ctx.drawImage(img, 0, 0);
+                
+                // Convert to JPG with specified quality
+                const imgData = canvas.toDataURL('image/jpeg', imageCurrentQuality / 100);
+                
+                // Store converted image
+                imageConvertedFiles.push({
+                    dataUrl: imgData,
+                    fileName: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+                    originalName: file.name
+                });
+                
+                // Create preview element
+                const previewElement = document.createElement('div');
+                previewElement.className = 'page-preview';
+                previewElement.innerHTML = `
+                    <img src="${imgData}" alt="${file.name}" class="preview-img">
+                    <div class="page-info">${file.name}</div>
+                    <button class="download-btn" data-index="${i}">
+                        <i class="fas fa-download"></i> Download Image
+                    </button>
+                `;
+                imagePreviewContainer.appendChild(previewElement);
+                
+                // Add download event listener
+                previewElement.querySelector('.download-btn').addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    downloadImageFile(index);
+                });
+            }
+            
+            imagePreviewSection.style.display = 'block';
+            downloadAllImageBtn.disabled = false;
+            imageStatusMessage.textContent = `Conversion complete! ${imageFiles.length} images converted to JPG.`;
+            imageProgressContainer.style.display = 'none';
+        }
+        
+        function downloadImageFile(index) {
+            if (!imageConvertedFiles[index]) return;
+            
+            const imgData = imageConvertedFiles[index].dataUrl;
+            const fileName = imageConvertedFiles[index].fileName;
+            
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            imageStatusMessage.textContent = `Downloaded ${fileName}`;
+        }
+        
+        function downloadAllImageFiles() {
+            if (imageConvertedFiles.length === 0) return;
+            
+            imageStatusMessage.textContent = "Starting downloads...";
+            
+            // Download each image with a small delay to avoid browser blocking
+            imageConvertedFiles.forEach((img, index) => {
+                setTimeout(() => {
+                    downloadImageFile(index);
+                }, index * 300);
+            });
+            
+            // Final message after all downloads
+            setTimeout(() => {
+                imageStatusMessage.textContent = `All ${imageConvertedFiles.length} images downloaded!`;
+            }, imageConvertedFiles.length * 300 + 500);
+        }
+        
+        function resetImageConverter() {
+            imageFiles = [];
+            imageInput.value = '';
+            imageConvertedFiles = [];
+            imagePreviewContainer.innerHTML = '';
+            imagePreviewSection.style.display = 'none';
+            downloadAllImageBtn.disabled = true;
+            imageStatusMessage.textContent = 'Ready to convert images';
+        }
+        
+        function updateImageProgress(percent) {
+            imageProgressBar.style.width = `${percent}%`;
+        }
+        
+        function resetImagePreview() {
+            imagePreviewContainer.innerHTML = '';
+            imagePreviewSection.style.display = 'none';
+            downloadAllImageBtn.disabled = true;
         }
         
         // Helper functions
@@ -610,6 +980,53 @@
                 reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
             });
+        }
+        
+        // Drag and drop functionality for PDF
+        setupDragAndDrop(pdfDropArea, handlePdfFile);
+        
+        // Drag and drop functionality for Images
+        setupDragAndDrop(imageDropArea, (file) => {
+            if (file.type.startsWith('image/')) {
+                handleImageFiles([file]);
+            } else {
+                imageStatusMessage.textContent = 'Please drop a valid image file.';
+            }
+        });
+        
+        function setupDragAndDrop(dropArea, handler) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('highlight');
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('highlight');
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                handler(file);
+            }
         }
     </script>
 </body>
